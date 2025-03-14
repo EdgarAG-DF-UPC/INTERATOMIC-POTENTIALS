@@ -1,0 +1,14 @@
+Vladimir Sladek,   Lukáš Bučinský,   Ján Matuška,   Michal Ilčin,   Vladimír Lukeša  and  Viliam Laurinca   (SBMILL) Potential Files (see https://doi.org/10.1039/C4CP02241F [a])
+
+Compilation: gfortran Sladek.corr.f -o s.x
+===========
+Executable: s.x
+========== 
+Run: ./s.x
+
+Different versions of the SBMILL Pb-He interatomic potential[a] are generated as tables in LAMMPS format:
+# dU[TQ]Z --> PbHe.dUTQZ.table
+# dU[DT]Z --> PbHe.dUDTZ.table
+# dU[DTQ]Z --> PbHe.dUDTQZ.table
+
+Several files corresponding to the first version ( dU[TQ]Z ) multiplied by a linear coupling parameter (0 < λ < 1) are also created, to be used in a discretized particle insertion process.
