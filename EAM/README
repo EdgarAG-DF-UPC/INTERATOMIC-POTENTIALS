@@ -1,0 +1,94 @@
+Citations:
+[a] Pb -- Zhou (2001): https://doi.org/10.1016/S1359-6454(01)00287-7
+[b] Pb -- Zhou (2004): https://doi.org/10.1103/PhysRevB.69.144113
+[c] Li -- Belashchenko (2009): https://doi.org/10.1134/S0018151X09020102
+[d] Li -- Belashchenko (2011): https://doi.org/10.1134/S0018151X12010014 & https://doi.org/10.1134/S0020168512010037
+[e] Pb -- Belashchenko (2012): https://doi.org/10.1134/S0036024412050056
+[f] Pb-Li -- Belashchenko (2019): https://doi.org/10.1134/S0018151X19060075
+[g] Li -- A. Al-Awad (2023): https://doi.org/10.1016/j.jnucmat.2023.154735
+
+
+
+
+Compilation: make clean eam.file.x
+===========
+Executable: eam.file.x 
+========== 
+Run: ./eam.file.x < EAM.INPUT.example
+---
+* EAM.INPUT.example can be:
+--> EAM.INPUT.BA
+--> EAM.INPUT.BB
+--> EAM.INPUT.BBM
+--> EAM.INPUT.BBY09
+--> EAM.INPUT.Z01A
+--> EAM.INPUT.Z04A
+--> or any other file with structure:
+    * LINE 1: 
+    day   month   year
+    * LINE 2:
+    ######  Pb  ######
+    * LINE 3:
+    authorPb   yearPb
+    * LINE 4:
+    ######  Li  ######
+    * LINE 5:
+    authorLi   yearLi
+    * LINE 6:
+    ###### LiPb ######
+    * LINE 7:
+    model3   xLi
+-------------------
+(1) day, month, year are used as comment in the output file (date of creation of the file)
+    day: 2 digits (dd)
+    ---
+    month: 2 digits (mm)
+    -----
+    year: 4 digits (yyyy)
+    ----
+(2), (4), (6) are just comments (skipped in the main program)
+(3), (5), (7) indicate the set of models to be used to generate the eam.alloy file
+    authorPb: author of the Pb model
+    -------
+    --> Zhou
+    --> Bela
+
+    authorLi: author of the Li model
+    -------
+    --> Awad
+    --> Bela
+    
+    yearPb: version of the Pb model (if there are multiple versions of a same model)
+    -----
+    --> if author1 is Zhou: 01 [a] or 04 [b]
+                            --    --
+    --> if author1 is Bela: 12 [e]
+                            --
+    
+    yearLi: version of the Li model (if there are multiple versions of a same model)
+    -----
+    --> if author2 is Awad: 23 [g]
+                            --
+    --> if author2 is Bela: 09 [c] or 11 [d]
+                            --    --
+
+    model3: model of the Pb-Li crossed interactions
+    ------
+    --> LJ84_19 [f]
+    --> Morse19 [f]
+    --> Morse23 [g]
+
+    xLi: atomic fraction of Li (0<= xLi <= 1; just one digit after decimal point). If xLi=0 ==> No Yukawa correction (see Ref. [f]).
+    ---
+    --> 0.0
+    --> 0.1
+    --> 0.2
+    --> 0.3
+    --> 0.4
+    --> 0.5
+    --> 0.6
+    --> 0.7
+    --> 0.8
+    --> 0.9
+    --> 1.0
+    Notice that files using 0.0, 0.1, 0.2, 0.3, 0.4, 1.0 will be identical to those genrating using .False. and the same models. 
