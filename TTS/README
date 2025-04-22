@@ -22,7 +22,7 @@ Run: ./tts.file.x < TTS.INPUT
 * It will be generated several lambda-scaled potentials (lambda ranging from 0 to 1).
   They can be moved to the directories X-He using the command "make move".
 
-* The file "table2" contains the star quantities in TTS model for H–H, H–He and He–He (See Table 2 of Ref.[2]).
+* The file "table2" contains the star quantities in TTS model for H–H, H–He and He–He (See Table 2 of Ref.[b]).
             ====== 
 stq		H-H		    H-He		He-He
 
@@ -43,4 +43,35 @@ C16     0.10228     0.17921     0.07244
 
 He-alkali interactions use those star quantities of H-He with 4 parameters De, Re, ZA, ZB included in the main code.
 Tritium is essentially a hydrogen: "Note that T can be modeled as its isotope hydrogen (H) here because T and H have the same electronic structure. In the following, we will only refer to H." (See Ref.[c])
+
+
+
+
+
+
+A second option is included:
+===========================
+Compilation: make clean tts.file.x
+===========
+Executable: tts.file.x
+==========
+Run: ./tts.file.x < TTS.INPUT
+
+This option creates a SINGLE table for Li-He pair interactions, which is the sum of the two following contributions:
+    (i) an artificial exponential repulsive / attractive term, V_i (r) = λ * A * exp(- r / B) = A * exp(- r / B + λ');
+    (ii) a coupled Pb-He potential, V_ii (r) = ξ * V_LiHe(r).
+Notes:
+    # A = 12.483 eV, B = 1 Å .
+    # V_LiHe(r) corresponds to the real Pb-He interaction of Sladek et al. [b] .
+    # λ, ξ are two independent coupling parameters, which must be indicated as input values when the program is executed
+    (introduce the strings He and Li followed by the two parameter values -- everything in a single line separated by one or several spaces).
+    # The first parameter can be used as both a repulsive interaction (λ > 0) and an attractive interaction (λ < 0).
+    The limiting case λ = 0 (i.e. λ'-->-infty) corresponds to the case in which this term is deactivated.
+    Example:
+        * It can be used to grow a cavity in an existing system.
+        * In the case that He is hosted in a LiPb mixture, -infty < λ' < -2 is a good choice. 
+    # The second coupling parameter should be 0 <= ξ <= 1.
+    Limiting cases:
+        * ξ = 0: absence of real Pb-He interactions.
+        * ξ = 1: the real Pb-He interactions are totally included.
 
