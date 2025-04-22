@@ -1,5 +1,7 @@
 tts.file.x: Ulong.o Ushort.o
 	gfortran TTS.f90 -o tts.file.x -O3 Ulong.o Ushort.o
+tts.born.x: Ulong.o Ushort.o
+	gfortran TTS_Born.f90 -o tts.born.x -O3 Ulong.o Ushort.o
 Ulong.o: Ulong.f90
 	gfortran -c -O3 Ulong.f90 
 Ushort.o: Ushort.f90
@@ -12,6 +14,8 @@ clean:
 	rm -f *mod
 	rm -f *eam.alloy
 	rm -f *table
+	rm -f *.x
+	rm -f fort.*
 move:
 	mv *HeHe* He-He
 	mv *LiHe* Li-He/
