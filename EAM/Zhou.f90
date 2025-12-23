@@ -1,4 +1,4 @@
-SUBROUTINE PARAMETRES_ZHOU(elem, versio, reO, feO, rhoeO, alphaO, betaO, AO, BO, kappaO, lambdaO, FnO, FO, etaO, FFeO)
+SUBROUTINE PARAMETRES_ZHOU(elem, versio, reO, feO, rhoeO, rhosO, alphaO, betaO, AO, BO, kappaO, lambdaO, FnO, FO, etaO, FFeO)
     IMPLICIT NONE
     CHARACTER*2, intent(in) :: elem
     ! TYPE PARAMETRE
@@ -6,9 +6,9 @@ SUBROUTINE PARAMETRES_ZHOU(elem, versio, reO, feO, rhoeO, alphaO, betaO, AO, BO,
     ! END TYPE PARAMETRE
     ! TYPE(PARAMETRE) re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn(0:3), F(0:3), eta, FFe
     CHARACTER*2, dimension(1:16) :: elements
-    REAL*8, dimension(1:16) :: re, fe, rhoe, alpha, beta, A, B, kappa, lambda, eta, FFe
+    REAL*8, dimension(1:16) :: re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, eta, FFe
     REAL*8, dimension(1:16,0:3) :: Fn, F
-    REAL*8, intent(out) :: reO, feO, rhoeO, alphaO, betaO, AO, BO, kappaO, lambdaO, FnO(0:3), FO(0:3), etaO, FFeO
+    REAL*8, intent(out) :: reO, feO, rhoeO, rhosO, alphaO, betaO, AO, BO, kappaO, lambdaO, FnO(0:3), FO(0:3), etaO, FFeO
     CHARACTER*6 cnt
     CHARACTER*2 versio
     INTEGER ielement
@@ -43,6 +43,8 @@ SUBROUTINE PARAMETRES_ZHOU(elem, versio, reO, feO, rhoeO, alphaO, betaO, AO, BO,
     feO = fe(ielement)
     READ(14,*) cnt, rhoe
     rhoeO = rhoe(ielement)
+    READ(14,*) cnt, rhos
+    rhosO = rhos(ielement)
     READ(14,*) cnt, alpha
     alphaO = alpha(ielement)
     READ(14,*) cnt, beta
@@ -74,9 +76,10 @@ SUBROUTINE PARAMETRES_ZHOU(elem, versio, reO, feO, rhoeO, alphaO, betaO, AO, BO,
 END SUBROUTINE PARAMETRES_ZHOU
 
 
-REAL*8 FUNCTION Femb_Zhou(rho)
+REAL*8 FUNCTION Femb_Zhou(rho_reduced)
       IMPLICIT NONE
-      REAL*8 rho, re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn(0:3), F(0:3), eta, FFe
+      REAL*8, intent(in) :: rho_reduced
+      REAL*8 rho, re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, Fn(0:3), F(0:3), eta, FFe
       INTEGER i
       ! REAL*8, parameter :: rhoe=8.906840d0, rhon=0.85d0*rhoe, &
       !    rho0=1.15d0*rhoe
@@ -84,8 +87,9 @@ REAL*8 FUNCTION Femb_Zhou(rho)
       ! REAL*8, parameter :: eta=1.172361d0, Fe=-1.440494d0
       ! REAL*8, dimension(0:3), parameter :: Fn=(/-1.419644d0, -0.228622d0, 0.630069d0, -0.560952d0 /), &
       !    F=(/-1.44d0, 0d0, 0.921049d0, 0.108847d0 /)
-      COMMON /Zhou/ re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn, F, eta, FFe
+      COMMON /Zhou/ re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, Fn, F, eta, FFe
    
+      rho = rho_reduced*rhoe
       rhon=0.85d0*rhoe
       rho0=1.15d0*rhoe
 
@@ -99,7 +103,7 @@ REAL*8 FUNCTION Femb_Zhou(rho)
             Femb_Zhou = Femb_Zhou + F(i)*(rho/rhoe-1d0)**dble(i)
          enddo
       elseif (rho .ge. rho0) then
-            Femb_Zhou = FFe * (1d0 - eta*dlog(rho/rhoe)) * (rho/rhoe)**eta
+            Femb_Zhou = FFe * (1d0 - eta*dlog(rho/rhos)) * (rho/rhos)**eta
       else
          print*, "ERROR: rho out of bounds"
          stop
@@ -124,14 +128,14 @@ END FUNCTION Femb_Zhou
 REAL*8 FUNCTION phi_Zhou(r)
     IMPLICIT NONE
     REAL*8, intent(in) :: r
-    REAL*8 re, fe, rhoe, alpha, beta, A, B, kappa, lambda, eta, FFe
+    REAL*8 re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, eta, FFe
     REAL*8, dimension(0:3) :: Fn, F
     REAL*8 funcio
-    COMMON /Zhou/ re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn, F, eta, FFe
+    COMMON /Zhou/ re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, Fn, F, eta, FFe
 
     ! phi = A*dexp(-alpha*(r/re-1d0))/(1d0+(r/re-kappa)**20d0) - B*dexp(-beta*(r/re-1d0))/(1d0+(r/re-lambda)**20d0)
 
-    phi_Zhou = funcio(r,re,A,alpha,kappa) - funcio(r,re,B,beta,lambda)
+    phi_Zhou = (funcio(r,re,A,alpha,kappa) - funcio(r,re,B,beta,lambda))
 
     return
 END FUNCTION phi_Zhou

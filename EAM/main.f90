@@ -14,12 +14,12 @@ PROGRAM EAMALLOYFILE
     CHARACTER*10 FORMAT
     REAL*8 r, phi, rho, F!, Femb_Pb, Femb_Li, phi_Pb, phi_Li
     REAL*8, dimension(0:nr) :: rpot_Pb, rpot_Li
-    REAL*8 re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn(0:3), F0(0:3), eta, FFe
+    REAL*8 re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, Fn(0:3), F0(0:3), eta, FFe
     REAL*8 PSI(0:6), Ae(1:7), Be(1:7), Ce(1:7), me ! EAM Li-Li
     REAL*8 aaa(1:3,0:8), rp(1:4) ! EAM Pb-Pb
     CHARACTER*3 aim ! ---------     "    "    -------- 
     LOGICAL AWAD, BELASHCHENKO, ZHOU, YUKAWA
-    COMMON /Zhou/ re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn, F0, eta, FFe
+    COMMON /Zhou/ re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, Fn, F0, eta, FFe
     COMMON /BelashchenkoLi/ PSI,Ae,Be,Ce,me
     COMMON /BelashchenkoPb/ aaa,rp
     FORMAT = "(E24.16)"
@@ -144,7 +144,7 @@ REAL*8 FUNCTION f_Pb(r)
     REAL*8 funcio, df_Pb
 
     if ((modelPb .eq. "Zhou01") .or. (modelPb .eq. "Zhou04")) then
-        f_Pb = funcio(r, re, Fe, beta, lambda)
+        f_Pb = funcio(r, re, Fe, beta, lambda) / rhoe
     elseif (modelPb .eq. "Bela12") then
         call electro(r, f_Pb, df_Pb, 5.1531d0, 1.2200d0)
     else
@@ -160,7 +160,9 @@ REAL*8 FUNCTION phi_Li(r)
 
     if (modelLi .eq. "Awad23") then
         phi_Li = phi_Li_Awad(r)
-    elseif (modelLi .eq. "Bela09") then
+    elseif ((modelLi .eq. "Bela09")&
+            .or. &
+            (modelLi .eq. "Bela14")) then
         phi_Li = phi_li_2009(r)
     elseif (modelLi .eq. "Bela11") then
         phi_Li = phi_li_2011(r)
@@ -177,7 +179,11 @@ REAL*8 FUNCTION Femb_Li(rho)
 
     if (modelLi .eq. "Awad23") then
         Femb_Li = Femb_Li_Awad(rho)
-    elseif ((modelLi .eq. "Bela09") .or. (modelLi .eq. "Bela11")) then
+    elseif ((modelLi .eq. "Bela09") &
+            .or. &
+            (modelLi .eq. "Bela14") &
+            .or. &
+            (modelLi .eq. "Bela11")) then
         call embedding_Li(rho, Femb_Li, dFemb_Li)
     else
         print*, "ERROR: no Femb_Li selected"
@@ -194,7 +200,7 @@ REAL*8 FUNCTION f_Li(r)
     if (modelLi .eq. "Awad23") then
         p1 = 3.0511d0
         p2 = 1.2200d0
-    elseif (modelLi .eq. "Bela09") then
+    elseif ((modelLi .eq. "Bela09") .or. (modelLi .eq. "Bela14")) then
         p1 = 3.0450d0
         p2 = 1.2200d0
     elseif (modelLi .eq. "Bela11") then
@@ -229,9 +235,64 @@ REAL*8 FUNCTION phi_PbLi(r)
 END FUNCTION phi_PbLi
 SUBROUTINE PARAMETRES_Li()
     IMPLICIT NONE
-    INTEGER m
+    integer i
     if (modelLi .eq. "Bela09") then
         print*, "Li -----> Belashchenko EAM (2009)"
+        me = 1.5d0 
+        PSI(0) = 1d0 
+        PSI(1) = 0.900d0 
+        PSI(2) = 0.840d0 
+        PSI(3) = 0.700d0 
+        PSI(4) = 0.480d0 
+        PSI(5) = 0.420d0 
+        PSI(6) = 1.100d0 
+
+        Ae(1) = -0.880900d0 
+        ! Ae(2) = -0.880470d0 
+        ! Ae(3) = -0.872754d0 
+        ! Ae(4) = -0.859314d0 
+        ! Ae(5) = -0.808846d0 
+        ! Ae(6) = -0.776842d0 
+        ! Ae(7) = -0.881043d0 
+
+        Be(1) =  0d0 
+        ! Be(2) = -0.008600d0 
+        ! Be(3) = -0.248600d0 
+        ! Be(4) =  0.056600d0 
+        ! Be(5) = -0.808846d0 
+        ! Be(6) = -0.551400d0 
+        ! Be(7) =  0.006520d0
+        Be(7) = 0d0 
+
+        Ce(1) =  0.0430d0!0.043000d0 
+        Ce(2) =  2.000d0!2.000000d0 
+        Ce(3) = -1.090d0!-1.090000d0 
+        Ce(4) =  1.300d0!1.300000d0 
+        Ce(5) =  0.300d0!-0.515400d0 
+        ! Ce(6) =  0.000000d0 
+        ! Ce(7) =  0d0!0.018130d0 
+
+        ! Ae(2) = Ae(1) + Be(1)*(PSI(1)-PSI(0)) + Ce(1)*(PSI(1)-PSI(0))**2d0
+        ! Be(2) = 2d0*Ce(1)*(PSI(1)-PSI(0))
+        
+        ! Ae(3) = Ae(2) + Be(2)*(PSI(2)-PSI(0)) + Ce(2)*(PSI(2)-PSI(0))**2d0
+        ! Be(3) = 2d0*Ce(2)*(PSI(2)-PSI(0))
+        do i = 2,5
+            Ae(i) = Ae(i-1) + Be(i-1)*(PSI(i-1)-PSI(i-2)) &
+                    + Ce(i-1)*(PSI(i-1)-PSI(i-2))**2d0
+            Be(i) = Be(i-1) + Ce(i-1)*(PSI(i-1)-PSI(i-2))
+        enddo
+        Ce(6) = 0d0!(Ae(6) + Be(6)*(PSI(5)-PSI(1)) + Ce(5)*PSI(5)**2d0) &
+                !/ (2d0*PSI(1)*PSI(5) - PSI(1)**2d0)
+        Ae(6) = Ae(5) + Be(5)*(PSI(5)-PSI(4)) - Be(6)*(PSI(5)-PSI(1)) &
+                + Ce(5)*(PSI(5)-PSI(4))**2d0 - Ce(6)*(PSI(5)-PSI(1))**2d0
+        Be(6) = Be(5) + 2d0*Ce(5)*(PSI(5)-PSI(4)) - 2d0*Ce(6)*(PSI(5)-PSI(1))
+        
+
+        Ae(7) = Ae(1) - Ce(1)/3d0*(PSI(6)-PSI(0))**2d0
+        Ce(7) = 4d0/3d0 * Ce(1) * (PSI(6)-PSI(0))**0.5d0
+    elseif (modelLi .eq. "Bela14") then
+        print*, "Li -----> Belashchenko EAM (2009) - Modified by Fraile (2014)"
         me = 1.5d0 
         PSI(0) = 1d0 
         PSI(1) = 0.900d0 
@@ -261,9 +322,10 @@ SUBROUTINE PARAMETRES_Li()
         Ce(2) =  2.000000d0 
         Ce(3) = -1.090000d0 
         Ce(4) =  1.300000d0 
-        Ce(5) = -0.515400d0 
+        Ce(5) =  -0.515400d0 
         Ce(6) =  0.000000d0 
         Ce(7) =  0.018130d0 
+
     elseif (modelLi .eq. "Bela11") then
         print*, "Li -----> Belashchenko EAM (2011-2012)"
         me = 1.5d0 
@@ -350,7 +412,7 @@ SUBROUTINE PARAMETRES_Pb()
         close(97)
     elseif ((modelPb .eq. "Zhou01") .or. (modelPb .eq. "Zhou04")) then
         print*, "Pb -----> Zhou EAM (20"//verPb//")"
-        call PARAMETRES_ZHOU("Pb", verPb, re, fe, rhoe, alpha, beta, A, B, kappa, lambda, Fn, F0, eta, FFe)
+        call PARAMETRES_ZHOU("Pb", verPb, re, fe, rhoe, rhos, alpha, beta, A, B, kappa, lambda, Fn, F0, eta, FFe)
     else
         print*, "ERROR: Pb must be:"
         print*, "---> Bela12"
